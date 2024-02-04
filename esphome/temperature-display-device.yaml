@@ -1,0 +1,83 @@
+esphome:
+  name: temperature-display-device
+  friendly_name: Temperature Display Device
+
+esp8266:
+  board: esp01_1m
+
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "<removed>"
+
+ota:
+  password: <removed>
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  ap:
+    ssid: Temperature-Display-Device
+    password: <removed>
+
+sensor:
+  - platform: homeassistant
+    id: outside_temperature
+    entity_id: "sensor.outside_environment_sensor_outside_environment_sensors_temperature"
+    filters:
+    - sliding_window_moving_average:
+        window_size: 10
+        send_every: 1
+
+  - platform: homeassistant
+    id: outside_pressure
+    entity_id: "sensor.outside_environment_sensor_outside_environment_sensors_pressure"
+
+i2c:
+  sda: GPIO04
+  scl: GPIO05
+  scan: false
+  frequency: 400kHz
+
+font:
+  - file: 'fonts/Courier-New.ttf'
+    id: font1
+    size: 17
+
+  - file: 'fonts/BebasNeue-Regular.ttf'
+    id: font2
+    size: 50
+
+display:
+  # Temperature Display
+  - platform: ssd1306_i2c
+    model: SSD1306 128x64
+    address: 0x3C
+    update_interval: 5s
+    lambda: |-
+      // Print the header
+      it.printf(64, 0, id(font1), TextAlign::TOP_CENTER, "TEMPERATURE");
+
+      // Print outside temperature (from homeassistant sensor)
+      if (id(outside_temperature).has_state()) {
+        it.printf(64, 16, id(font2), TextAlign::TOP_CENTER , "%.1f°", id(outside_temperature).state);
+      }
+
+  # Air Pressure Display
+  - platform: ssd1306_i2c
+    model: SSD1306 128x64
+    address: 0x3D
+    update_interval: 5s
+    lambda: |-
+      // Print the header
+      it.printf(64, 0, id(font1), TextAlign::TOP_CENTER, "PRESSURE");
+
+      // Print outside pressure (from homeassistant sensor)
+      if (id(outside_pressure).has_state()) {
+        int intValue {id(outside_pressure).state};
+        it.printf(85, 16, id(font2), TextAlign::TOP_RIGHT , "%d", intValue);
+        it.printf(90, 46, id(font1), TextAlign::TOP_LEFT, "hPa");
+      }
+    

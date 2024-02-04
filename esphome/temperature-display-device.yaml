@@ -10,17 +10,17 @@ logger:
 # Enable Home Assistant API
 api:
   encryption:
-    key: "<removed>"
+    key: !secret api_encryption_key
 
 ota:
-  password: <removed>
+  password: !secret ota_password
 
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
   ap:
     ssid: Temperature-Display-Device
-    password: <removed>
+    password: !secret wifi_ap_password
 
 sensor:
   - platform: homeassistant
